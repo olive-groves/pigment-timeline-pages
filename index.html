@@ -68,7 +68,7 @@ import {registerFile} from "./_observablehq/stdlib.df69243a.js";
 
 registerFile("./data/all_paintings_all_letter_counts.json", {"name":"./data/all_paintings_all_letter_counts.json","mimeType":"application/json","path":"./_file/data/all_paintings_all_letter_counts.32fdfaf5.json","lastModified":1754487683939,"size":1007});
 registerFile("./data/full_pigment_counts.json", {"name":"./data/full_pigment_counts.json","mimeType":"application/json","path":"./_file/data/full_pigment_counts.b2732d4b.json","lastModified":1748336547889,"size":324274});
-registerFile("./data/painting_data_complete.json", {"name":"./data/painting_data_complete.json","mimeType":"application/json","path":"./_file/data/painting_data_complete.161eebf7.json","lastModified":1754487464217,"size":556324});
+registerFile("./data/painting_data_complete.json", {"name":"./data/painting_data_complete.json","mimeType":"application/json","path":"./_file/data/painting_data_complete.055e5137.json","lastModified":1755699120358,"size":544374});
 registerFile("./data/period_data.json", {"name":"./data/period_data.json","mimeType":"application/json","path":"./_file/data/period_data.28efcb3a.json","lastModified":1729244980000,"size":1531});
 
 define({id: "27d1fb15", inputs: ["paintingsImages","view","Inputs"], outputs: ["titleIdArray","paintingSearch"], body: (paintingsImages,view,Inputs) => {
@@ -136,7 +136,7 @@ const selection = view(Inputs.radio(["Time points - Start", "Time points - Middl
 return {selection};
 }});
 
-define({id: "c8eb6844", inputs: ["lanesData","paintingsAnalyzed","selection","disabledChoice","view","Inputs"], outputs: ["nrows","n","disabledSlider","radiusSize"], body: (lanesData,paintingsAnalyzed,selection,disabledChoice,view,Inputs) => {
+define({id: "d18edd89", inputs: ["lanesData","paintingsAnalyzed","selection","disabledChoice","view","Inputs"], outputs: ["nrows","n","disabledSlider","radiusSize"], body: (lanesData,paintingsAnalyzed,selection,disabledChoice,view,Inputs) => {
 const nrows = (Math.max(...lanesData(paintingsAnalyzed).map(o => o.yIndex))) + 1;
 const n = (nrows < 50) ? 25 : 50;
 
@@ -149,8 +149,8 @@ if (selection === "Time ranges") {
 };
 
 // Create a slider to adjust radius of time points
-// const radiusSize = view(Inputs.range([0, 25], {label: "Set point radius", step: 0.5, value: 650 / (nrows + n), disabled: disabledSlider[0]}));
-const radiusSize = view(Inputs.range([0, 25], {label: "Set point radius", step: 0.5, value: 7, disabled: disabledSlider[0]}));
+const radiusSize = view(Inputs.range([0, 25], {label: "Set point radius", step: 0.5, value: 650 / (nrows + n), disabled: disabledSlider[0]}));
+// const radiusSize = view(Inputs.range([0, 25], {label: "Set point radius", step: 0.5, value: 7, disabled: disabledSlider[0]}));
 return {nrows,n,disabledSlider,radiusSize};
 }});
 
@@ -159,6 +159,30 @@ define({id: "9832e7b2", inputs: ["view","Inputs"], outputs: ["analyzedChoice"], 
 const analyzedChoice = view(Inputs.radio(["All paintings", "Analyzed paintings", "Not analyzed paintings"], 
 {label: "Pigment analysis filter", value: "All paintings"}));
 return {analyzedChoice};
+}});
+
+define({id: "6374588d", inputs: ["paintingsRawImages","view","Inputs"], outputs: ["institutionOptions","institutionSelect"], body: (paintingsRawImages,view,Inputs) => {
+// Only show options for institutions that are present in the current painting data selection
+// To do: Perhaps order these options by the number of paintings they have (from largest to smallest collection)? 
+const institutionOptions = [];
+
+for (let i=0; i<paintingsRawImages.length; i++) {
+  if (paintingsRawImages[i].current_owner != null && paintingsRawImages[i].current_owner.length > 0) {
+    if (!institutionOptions.includes(paintingsRawImages[i].current_owner)) {
+      institutionOptions.push(paintingsRawImages[i].current_owner);
+      } 
+    } else {
+      if (!institutionOptions.includes("No info")) {
+        institutionOptions.push("No info");
+        }
+      }
+    }
+
+// Create a selection pane to allow for filtering on art institutions
+// To do: can a search bar at the top of the selection pane be added? (similar to VGWw)
+let institutionSelect = [];
+institutionSelect = view(Inputs.select(institutionOptions.sort(), {multiple: true, label: "Choose institution(s)"}));
+return {institutionOptions,institutionSelect};
 }});
 
 define({id: "b7fbd0b6", inputs: ["view","Inputs"], outputs: ["pigmentRadio"], body: (view,Inputs) => {
@@ -621,7 +645,7 @@ function setSubsetPigments(paintingData, pigmentData, subsetArray) {
 return {setSubsetPigments};
 }});
 
-define({id: "59fd7204", inputs: ["d3","paintingsRawImages","analyzedChoice"], outputs: ["lanesData","START_YEAR","END_YEAR","parseDates","paintingsImages","paintingsAnalyzed","month","placedPaintings"], body: (d3,paintingsRawImages,analyzedChoice) => {
+define({id: "cf9eaed4", inputs: ["d3","institutionSelect","paintingsRawImages","analyzedChoice"], outputs: ["lanesData","START_YEAR","END_YEAR","parseDates","paintingsFilteredImages","paintingsImages","paintingsAnalyzed","month","placedPaintings"], body: (d3,institutionSelect,paintingsRawImages,analyzedChoice) => {
 // Necessary functions for the painting timelines: stacking algorithm and data parser
 const lanesData = data => {
   const lanesData = []
@@ -681,9 +705,17 @@ function parseDates(data) {
   return sortedArray;
 };
 
-const paintingsImages = parseDates(paintingsRawImages)
+// Now first filter the data based on institution selection (if any), and then parse it
+let paintingsFilteredImages
+if (institutionSelect.length == 0) {
+  paintingsFilteredImages = paintingsRawImages;
+} else {
+  paintingsFilteredImages = paintingsRawImages.filter(painting => institutionSelect.includes(painting.current_owner));
+}
+
+const paintingsImages = parseDates(paintingsFilteredImages)
 // For now change the index of the second F25 manually to make it match the first
-paintingsImages[41].index = 6;
+// paintingsImages[41].index = 6;
 
 // A filtered dataset based on the pigment analysis radio choice
 let paintingsAnalyzed;
@@ -698,7 +730,7 @@ if (analyzedChoice == "Analyzed paintings") {
 const month = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 const placedPaintings = lanesData(paintingsImages); // I think this line is redundant?
-return {lanesData,START_YEAR,END_YEAR,parseDates,paintingsImages,paintingsAnalyzed,month,placedPaintings};
+return {lanesData,START_YEAR,END_YEAR,parseDates,paintingsFilteredImages,paintingsImages,paintingsAnalyzed,month,placedPaintings};
 }});
 
 define({id: "516842b6", inputs: ["paintingsImages"], outputs: ["tip"], body: (paintingsImages) => {
@@ -1103,8 +1135,9 @@ return {extractNames};
   <h3>Painting timeline options</h3>
 <div class="observablehq observablehq--block"><!--:15d4efc2:--></div>
 <div class="observablehq observablehq--block"><!--:7d863ffb:--></div>
-<div class="observablehq observablehq--block"><!--:c8eb6844:--></div>
+<div class="observablehq observablehq--block"><!--:d18edd89:--></div>
 <div class="observablehq observablehq--block"><!--:9832e7b2:--></div>
+<div class="observablehq observablehq--block"><!--:6374588d:--></div>
   <h3>Pigment overview options</h3>
 <div class="observablehq observablehq--block"><!--:b7fbd0b6:--></div>
 <div class="observablehq observablehq--block"><!--:214797c6:--></div>
@@ -1127,7 +1160,7 @@ return {extractNames};
   <div class="clickArrayContainer" id="clickArrayContainer"></div>
 <div class="observablehq observablehq--block"><!--:56a70a33:--></div>
 <div class="observablehq observablehq--block"><!--:eeda6c2d:--></div>
-<div class="observablehq observablehq--block"><!--:59fd7204:--></div>
+<div class="observablehq observablehq--block"><!--:cf9eaed4:--></div>
 <div class="observablehq observablehq--block"><!--:516842b6:--></div>
 <div class="observablehq observablehq--block"><!--:5d8bce6a:--></div>
 <div class="observablehq observablehq--block"><!--:04a58a5d:--></div>
@@ -1144,7 +1177,7 @@ return {extractNames};
 <div>Painting and period data taken from <a href="https://data.spinque.com/ld/data/vangoghworldwide/" target="_blank" rel="noopener noreferrer">Van Gogh Worldwide</a> <br>
           Letter data taken from <a href="https://data.spinque.com/ld/data/vangoghworldwide/van_gogh_letters/" target="_blank" rel="noopener noreferrer">Vincent Van Gogh - The Letters (Jansen, Luijten, and Bakker, 2009)</a> <br>
           Painting images taken from <a href="https://data.mendeley.com/datasets/3sjjtjfhx7/2" target="_blank" rel="noopener noreferrer">Van Gogh Paintings dataset (Kim, 2022)</a> <br>
-          Last built Wed Aug 06 2025 15:58:27 GMT+0200 (Central European Summer Time)</div>
+          Last built Wed Aug 20 2025 16:47:06 GMT+0200 (Central European Summer Time)</div>
 </footer>
 </div>
 </body>
