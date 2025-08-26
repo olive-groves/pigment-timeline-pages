@@ -760,14 +760,14 @@ const placedPaintings = lanesData(paintingsImages); // I think this line is redu
 return {lanesData,START_YEAR,END_YEAR,parseDates,paintingsFilteredImages,paintingsImages,paintingsAnalyzed,month,placedPaintings};
 }});
 
-define({id: "516842b6", inputs: ["paintingsImages"], outputs: ["tip"], body: (paintingsImages) => {
+define({id: "af085b12", inputs: ["paintingsImages"], outputs: ["tip"], body: (paintingsImages) => {
 // Function that accepts a painting index and generates the html tooltip accordingly
 function tip(id) {
   let d = paintingsImages.filter((c) => c.index == id)[0];
   return `<h4>${d.title} (${d.fnumber})</h4>
   ${d.location}
   <br> ${d.display}
-  <br> <img src=${d.image} width="200">
+  <br> <img src=${d.image} width="100">
   `;
 }
 return {tip};
@@ -802,7 +802,7 @@ const setPigmentClicked = (value) => pigmentClicked.value = value;
 return {clickId,setClickId,pigmentClicked,setPigmentClicked};
 }});
 
-define({id: "745a21ed", inputs: ["d3","width","paintingsAnalyzed","Plot","radiusSize","setClickId","tippy","tip","clickId","nrows","lanesData"], outputs: ["xScale","maxHeight","zeroArray","points_timeline","range_timeline"], body: (d3,width,paintingsAnalyzed,Plot,radiusSize,setClickId,tippy,tip,clickId,nrows,lanesData) => {
+define({id: "b647bdf7", inputs: ["d3","width","paintingsAnalyzed","Plot","radiusSize","setClickId","tippy","tip","clickId","nrows","lanesData"], outputs: ["xScale","maxHeight","zeroArray","points_timeline","range_timeline"], body: (d3,width,paintingsAnalyzed,Plot,radiusSize,setClickId,tippy,tip,clickId,nrows,lanesData) => {
 // Painting timelines: point and range based
 const xScale = d3
     .scaleTime()
@@ -864,7 +864,7 @@ function points_timeline(paintingData, position, subset) {
         content: tip(t),
         theme: 'custom',
         allowHTML: true,
-        maxWidth: 200,
+        maxWidth: 100,
         interactive: true,
         appendTo: () => document.body
       })
@@ -923,7 +923,7 @@ function range_timeline(paintingData, subset) {
         content: tip(t),
         theme: 'custom',
         allowHTML: true,
-        maxWidth: 200,
+        maxWidth: 100,
         interactive: true,
         appendTo: () => document.body
       })
@@ -1139,6 +1139,7 @@ return {extractNames};
   .tippy-box[data-theme~='custom'] {
     background-color: white;
     border: 1px solid black;
+    font-size: 12px;
   }
 
   .container img {
@@ -1189,10 +1190,10 @@ return {extractNames};
 <div class="observablehq observablehq--block"><!--:56a70a33:--></div>
 <div class="observablehq observablehq--block"><!--:eeda6c2d:--></div>
 <div class="observablehq observablehq--block"><!--:3d67007f:--></div>
-<div class="observablehq observablehq--block"><!--:516842b6:--></div>
+<div class="observablehq observablehq--block"><!--:af085b12:--></div>
 <div class="observablehq observablehq--block"><!--:5d8bce6a:--></div>
 <div class="observablehq observablehq--block"><!--:04a58a5d:--></div>
-<div class="observablehq observablehq--block"><!--:745a21ed:--></div>
+<div class="observablehq observablehq--block"><!--:b647bdf7:--></div>
 <div class="observablehq observablehq--block"><!--:0da125c8:--></div>
 <div class="observablehq observablehq--block"><!--:a79794be:--></div>
 <div class="observablehq observablehq--block"><!--:8c607c2c:--></div>
@@ -1205,7 +1206,7 @@ return {extractNames};
 <div>Painting and period data taken from <a href="https://data.spinque.com/ld/data/vangoghworldwide/" target="_blank" rel="noopener noreferrer">Van Gogh Worldwide</a> <br>
           Letter data taken from <a href="https://data.spinque.com/ld/data/vangoghworldwide/van_gogh_letters/" target="_blank" rel="noopener noreferrer">Vincent Van Gogh - The Letters (Jansen, Luijten, and Bakker, 2009)</a> <br>
           Painting images taken from <a href="https://data.mendeley.com/datasets/3sjjtjfhx7/2" target="_blank" rel="noopener noreferrer">Van Gogh Paintings dataset (Kim, 2022)</a> <br>
-          Last built Tue Aug 26 2025 09:21:46 GMT+0200 (Central European Summer Time)</div>
+          Last built Tue Aug 26 2025 17:02:35 GMT+0200 (Central European Summer Time)</div>
 </footer>
 </div>
 </body>
