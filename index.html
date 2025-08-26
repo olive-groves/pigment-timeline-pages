@@ -185,6 +185,28 @@ institutionSelect = view(Inputs.select(institutionOptions.sort(), {multiple: tru
 return {institutionOptions,institutionSelect};
 }});
 
+define({id: "76ad7ee5", inputs: ["paintingsRawImages","view","Inputs"], outputs: ["locationOptions","locationChoice"], body: (paintingsRawImages,view,Inputs) => {
+// Only show options for production locations that are present in the current painting data selection
+// To do: make this into a function as it's the same as the previous code block?
+const locationOptions = [];
+
+for (let i=0; i<paintingsRawImages.length; i++) {
+  if (paintingsRawImages[i].location != null && paintingsRawImages[i].location.length > 0) {
+    if (!locationOptions.includes(paintingsRawImages[i].location)) {
+      locationOptions.push(paintingsRawImages[i].location);
+      } 
+    } else {
+      if (!locationOptions.includes("No info")) {
+        locationOptions.push("No info");
+        }
+      }
+    }
+
+// Create checkboxes to allow for filtering on production locations
+const locationChoice = view(Inputs.checkbox(locationOptions.sort(), {label: "Choose production location(s)"}));
+return {locationOptions,locationChoice};
+}});
+
 define({id: "b7fbd0b6", inputs: ["view","Inputs"], outputs: ["pigmentRadio"], body: (view,Inputs) => {
 // Create radio buttons for choosing the pigment display
 const pigmentRadio = view(Inputs.radio(new Map([["Pigments", "pigment"], ["Colorgroups", "Colorgroup"]]), {label: "Choose display", value: "pigment"}));
@@ -645,7 +667,7 @@ function setSubsetPigments(paintingData, pigmentData, subsetArray) {
 return {setSubsetPigments};
 }});
 
-define({id: "cf9eaed4", inputs: ["d3","institutionSelect","paintingsRawImages","analyzedChoice"], outputs: ["lanesData","START_YEAR","END_YEAR","parseDates","paintingsFilteredImages","paintingsImages","paintingsAnalyzed","month","placedPaintings"], body: (d3,institutionSelect,paintingsRawImages,analyzedChoice) => {
+define({id: "3d67007f", inputs: ["d3","institutionSelect","locationChoice","paintingsRawImages","analyzedChoice"], outputs: ["lanesData","START_YEAR","END_YEAR","parseDates","paintingsFilteredImages","paintingsImages","paintingsAnalyzed","month","placedPaintings"], body: (d3,institutionSelect,locationChoice,paintingsRawImages,analyzedChoice) => {
 // Necessary functions for the painting timelines: stacking algorithm and data parser
 const lanesData = data => {
   const lanesData = []
@@ -705,12 +727,17 @@ function parseDates(data) {
   return sortedArray;
 };
 
-// Now first filter the data based on institution selection (if any), and then parse it
+// Now first filter the data based on institution and location selection (if any), and then parse it
 let paintingsFilteredImages
-if (institutionSelect.length == 0) {
+if (institutionSelect.length == 0 && locationChoice.length == 0) { // No selections; show all data
   paintingsFilteredImages = paintingsRawImages;
-} else {
+} else if (institutionSelect.length > 0 && locationChoice.length == 0) { // Only institution selection
   paintingsFilteredImages = paintingsRawImages.filter(painting => institutionSelect.includes(painting.current_owner));
+} else if (institutionSelect.length == 0 && locationChoice.length > 0) { // Only location selection
+  paintingsFilteredImages = paintingsRawImages.filter(painting => locationChoice.includes(painting.location));
+} else { // Both institution and location selection
+  paintingsFilteredImages = paintingsRawImages.filter(painting => institutionSelect.includes(painting.current_owner));
+  paintingsFilteredImages = paintingsFilteredImages.filter(painting => locationChoice.includes(painting.location));
 }
 
 const paintingsImages = parseDates(paintingsFilteredImages)
@@ -1138,6 +1165,7 @@ return {extractNames};
 <div class="observablehq observablehq--block"><!--:d18edd89:--></div>
 <div class="observablehq observablehq--block"><!--:9832e7b2:--></div>
 <div class="observablehq observablehq--block"><!--:6374588d:--></div>
+<div class="observablehq observablehq--block"><!--:76ad7ee5:--></div>
   <h3>Pigment overview options</h3>
 <div class="observablehq observablehq--block"><!--:b7fbd0b6:--></div>
 <div class="observablehq observablehq--block"><!--:214797c6:--></div>
@@ -1160,7 +1188,7 @@ return {extractNames};
   <div class="clickArrayContainer" id="clickArrayContainer"></div>
 <div class="observablehq observablehq--block"><!--:56a70a33:--></div>
 <div class="observablehq observablehq--block"><!--:eeda6c2d:--></div>
-<div class="observablehq observablehq--block"><!--:cf9eaed4:--></div>
+<div class="observablehq observablehq--block"><!--:3d67007f:--></div>
 <div class="observablehq observablehq--block"><!--:516842b6:--></div>
 <div class="observablehq observablehq--block"><!--:5d8bce6a:--></div>
 <div class="observablehq observablehq--block"><!--:04a58a5d:--></div>
@@ -1177,7 +1205,7 @@ return {extractNames};
 <div>Painting and period data taken from <a href="https://data.spinque.com/ld/data/vangoghworldwide/" target="_blank" rel="noopener noreferrer">Van Gogh Worldwide</a> <br>
           Letter data taken from <a href="https://data.spinque.com/ld/data/vangoghworldwide/van_gogh_letters/" target="_blank" rel="noopener noreferrer">Vincent Van Gogh - The Letters (Jansen, Luijten, and Bakker, 2009)</a> <br>
           Painting images taken from <a href="https://data.mendeley.com/datasets/3sjjtjfhx7/2" target="_blank" rel="noopener noreferrer">Van Gogh Paintings dataset (Kim, 2022)</a> <br>
-          Last built Wed Aug 20 2025 16:47:06 GMT+0200 (Central European Summer Time)</div>
+          Last built Tue Aug 26 2025 09:21:46 GMT+0200 (Central European Summer Time)</div>
 </footer>
 </div>
 </body>
